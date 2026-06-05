@@ -4,6 +4,8 @@ const cors = require('cors')
 const dotenv = require('dotenv')
 const connectDB = require('./config/db')
 const authRoutes = require('./routes/auth')
+const transactionRoutes = require('./routes/transactions')
+
 dotenv.config()
 connectDB()
 const app = express()
@@ -15,6 +17,7 @@ app.get('/', (req, res) => {
   res.send('Expense Tracker API is running')
 })
 app.use('/api/auth', authRoutes)
+app.use('/api/transactions', transactionRoutes)
 
 const PORT = process.env.PORT || 5000
 
