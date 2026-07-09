@@ -13,6 +13,7 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true)
   const [insight, setInsight] = useState('')
   const [insightLoading, setInsightLoading] = useState(false)
+  const [categoryLoading, setCategoryLoading] = useState(false)
   const [form, setForm] = useState({
     title: '',
     amount: '',
@@ -48,7 +49,18 @@ const Dashboard = () => {
       setInsightLoading(false)
     }
   }
-
+  const handleSuggestCategory = async () => {
+    if (!form.title) return
+    setCategoryLoading(true)
+    try {
+      const res = await API.post('/ai/suggest-category', { title: form.title })
+      setForm({ ...form, category: res.data.category })
+    } catch (err) {
+      console.log(err)
+    } finally {
+      setCategoryLoading(false)
+    }
+  }
   useEffect(() => {
     fetchData()
   }, [])
@@ -162,15 +174,26 @@ const Dashboard = () => {
             <form onSubmit={handleSubmit}>
               <div className="form-group">
                 <label>Title</label>
-                <input
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input
                   type="text"
                   name="title"
                   value={form.title}
                   onChange={handleChange}
                   placeholder="e.g. Grocery shopping"
                   required
+                  style={{flex: 1 }}
                 />
-              </div>
+                <button
+                type="button"
+                onClick={handleSuggestCategory}
+                disabled={!form.title || categoryLoading}
+                style={{ width: 'auto', padding: '0 12px', fontSize: '12px' }}
+              >
+                {categoryLoading ? '...' : '🤖 Auto'}
+              </button>
+          </div>
+        </div>
               <div className="form-group">
                 <label>Amount (₹)</label>
                 <input
