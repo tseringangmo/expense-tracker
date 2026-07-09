@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import API from '../api/axios'
+import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 
 const Dashboard = () => {
   const { user, logout } = useAuth()
@@ -10,6 +11,8 @@ const Dashboard = () => {
   const [transactions, setTransactions] = useState([])
   const [summary, setSummary] = useState({ income: 0, expense: 0, balance: 0 })
   const [loading, setLoading] = useState(true)
+  const [insight, setInsight] = useState('')
+  const [insightLoading, setInsightLoading] = useState(false)
   const [form, setForm] = useState({
     title: '',
     amount: '',
@@ -34,6 +37,18 @@ const Dashboard = () => {
     }
   }
 
+  const fetchInsight = async () => {
+    setInsightLoading(true)
+    try {
+      const res = await API.get('/ai/insights')
+      setInsight(res.data.insight)
+    } catch (err) {
+      console.log(err)
+    } finally {
+      setInsightLoading(false)
+    }
+  }
+
   useEffect(() => {
     fetchData()
   }, [])
@@ -45,6 +60,10 @@ const Dashboard = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    if (Number(form.amount) <= 0) {
+      setError('Amount must be greater than 0')
+      return
+    }
     try {
       await API.post('/transactions', {
         ...form,
@@ -97,6 +116,43 @@ const Dashboard = () => {
             <p>Balance</p>
             <h2>₹{summary.balance}</h2>
           </div>
+        </div>
+
+        <div className="chart-section">
+          <h3>Income vs Expense</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <PieChart>
+              <Pie
+                data={[
+                  { name: 'Income', value: summary.income },
+                  { name: 'Expense', value: summary.expense }
+                ]}
+                cx="50%"
+                cy="50%"
+                outerRadius={100}
+                dataKey="value"
+                label={({ name, percent }) =>
+                  `${name} ${(percent * 100).toFixed(0)}%`
+                }
+              >
+                <Cell fill="#10b981" />
+                <Cell fill="#ef4444" />
+              </Pie>
+              <Tooltip formatter={(value) => `₹${value}`} />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="ai-section">
+          <h3>🤖 AI Spending Insights</h3>
+          {insight ? (
+            <p className="insight-text">{insight}</p>
+          ) : (
+            <button onClick={fetchInsight} disabled={insightLoading}>
+              {insightLoading ? 'Analysing your spending...' : '✨ Get AI Insights'}
+            </button>
+          )}
         </div>
 
         <div className="dashboard-grid">
