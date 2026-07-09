@@ -8,7 +8,16 @@ const User = require('../models/User')
 router.post('/register', async (req, res) => {
   try {
     const { name, email, password } = req.body
+    // validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: 'Please enter a valid email' })
+    }
 
+    // validate password length
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' })
+    }
     // check if user already exists
     const existingUser = await User.findOne({ email })
     if (existingUser) {

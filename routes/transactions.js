@@ -69,12 +69,13 @@ router.get('/summary', protect, async (req, res) => {
       .filter(t => t.type === 'income')
       .reduce((sum, t) => sum + t.amount, 0)
 
-    const expense = transactions
+    const expense = Math.round(
+      transactions
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + t.amount, 0)
+    )
 
-    const balance = income - expense
-
+    const balance = Math.round(income - expense)
     res.status(200).json({ income, expense, balance })
 
   } catch (error) {
