@@ -67,5 +67,32 @@ Give specific actionable advice based on this data. Mention specific categories 
     res.status(500).json({ message: error.message })
   }
 })
+router.post('/suggest-category', protect, async (req, res) => {
+  try {
+    const groq = new Groq({ apiKey: process.env.GROQ_API_KEY })
+    const { title } = req.body
 
+    const completion = await groq.chat.completions.create({
+      messages: [{
+        role: 'user',
+        content: `You are a finance categorization assistant. Based on this transaction title, suggest ONE category from this exact list: food, rent, salary, entertainment, transport, shopping, health, other.
+
+Transaction title: "${title}"
+
+Reply with ONLY the category word, nothing else. No explanation, no punctuation.`
+      }],
+      model: 'llama-3.1-8b-instant',
+      max_tokens: 10
+    })
+
+    const category = completion.choices[0].message.content.trim().toLowerCase()
+    const validCategories = ['food', 'rent', 'salary', 'entertainment', 'transport', 'shopping', 'health', 'other']
+    const finalCategory = validCategories.includes(category) ? category : 'other'
+
+    res.status(200).json({ category: finalCategory })
+
+  } catch (error) {
+    res.status(500).json({ message: error.message })
+  }
+})
 module.exports = router
